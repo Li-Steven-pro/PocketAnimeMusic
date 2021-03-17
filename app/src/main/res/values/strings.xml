@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Pocket Anime Music</string>
+    <string name="welcome_message">Welcome to Pocket Anime Music</string>
+    <string name="description">You can listen to your anime song from your Anilist</string>
+    <string name="title_list">My List</string>
+    <string name="title_play">Play</string>
+    <string name="title_browse">Browse</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="anilist_pseudo">Anilist Pseudo :</string>
+</resources>

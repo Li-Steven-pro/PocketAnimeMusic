@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".StartActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/welcomeMessage"
+            android:layout_width="match_parent"
+            android:layout_height="148dp"
+            android:text="@string/welcome_message"
+            android:textAlignment="center"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/anilistLabel"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:text="@string/anilist_pseudo"
+            android:textAlignment="center" />
+
+        <EditText
+            android:id="@+id/anilistPseudo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:importantForAutofill="no">
+
+        </EditText>
+
+        <Button
+            android:id="@+id/getAnilistPseudoBtn"
+            android:layout_width="114dp"
+            android:layout_height="wrap_content"
+            android:text="Valid your Anilist" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
