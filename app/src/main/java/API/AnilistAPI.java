@@ -10,13 +10,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import steven.li.pocketanimemusic.AppActivity;
 
@@ -31,7 +27,14 @@ public class AnilistAPI {
         this.url = "https://graphql.anilist.co";
     }
 
+    /**
+     * Check if the user exists in the anilist website
+     * Move to the next and main activity if he is
+     * Keep the user in the current activty if he didn't put valid anilist pseudo
+     * @param anilistUser the user anilist pseudo
+     */
     public void checkUserExist(String anilistUser){
+        // Make a graphiQL request using HttpRequest and Volley
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         JSONObject postData = new JSONObject();
         JSONObject variables = new JSONObject();
@@ -48,11 +51,10 @@ public class AnilistAPI {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        //System.out.println("process Query");
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, postData, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                System.out.println(response);
+                // The user exists and send pseudo using intent and begin the main activity
                 Intent i = new Intent(context, AppActivity.class);
                 i.putExtra("anilistName", anilistUser);
                 context.startActivity(i);
@@ -60,12 +62,16 @@ public class AnilistAPI {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                // Show the user that he puts invalid anilist pseudo
                 Toast.makeText(context, "Anilist user not found!", Toast.LENGTH_SHORT).show();
             }
         });
         requestQueue.add(jsonObjectRequest);
     }
 
+    /*
+    TODO : make broadcast to use this function
+    // Get the anilist list with specific data such as title
     public void getUserList(String anilistUser) {
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         JSONObject postData = new JSONObject();
@@ -104,6 +110,6 @@ public class AnilistAPI {
             }
         });
         requestQueue.add(jsonObjectRequest);
-    }
+    }*/
 
 }

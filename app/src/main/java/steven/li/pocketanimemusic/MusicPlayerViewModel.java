@@ -8,6 +8,7 @@ import Model.MusicPlayerModel;
 
 public class MusicPlayerViewModel extends ViewModel {
     private final MutableLiveData<MusicPlayerModel> musicPlayer = new MutableLiveData<MusicPlayerModel>();
+    // Seekbar specific data
     private final MutableLiveData<Integer> currentPosition = new MutableLiveData<Integer>();
 
     public void setMusicPlayer(MusicPlayerModel musicPlayer){

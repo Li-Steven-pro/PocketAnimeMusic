@@ -4,20 +4,16 @@ package steven.li.pocketanimemusic;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.fragment.app.FragmentActivity;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -68,8 +64,10 @@ public class AnimeListAdapter extends ArrayAdapter<Anime> {
         TextView label = convertView.findViewById(R.id.text_label);
         label.setText(anime.getTitle());
 
+        // Layout for list song
         LinearLayout listView = convertView.findViewById(R.id.list_song_view);
 
+        // Toggle list song
         ImageButton imageButton = convertView.findViewById(R.id.btn_detail);
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,12 +100,15 @@ public class AnimeListAdapter extends ArrayAdapter<Anime> {
         });
         // Add the image request in the queue
         queue.add(request);
-
-
+        // Set song view in the layout
         renderlistsongView(inflater, parent, listView, anime.getListSong());
         return convertView;
 
     }
+
+    /**
+     * Put song list in the view inflated for each one
+     */
     private void renderlistsongView(LayoutInflater inflater, ViewGroup parent, LinearLayout linearLayout, List<Song> songs){
         for(Song song : songs){
             View inflatedView = inflater.inflate(R.layout.item_song_layout, parent, false);

@@ -19,6 +19,7 @@ public class StartActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
         getAnilistBtn = findViewById(R.id.getAnilistPseudoBtn);
+        // Set listener
         getAnilistBtn.setOnClickListener(this);
 
 
@@ -26,7 +27,9 @@ public class StartActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View v) {
+        // Get user input
         anilistPseudo = findViewById(R.id.anilistPseudo);
+        // Send request and check if the user exists
         new AnilistAPI(this).checkUserExist(anilistPseudo.getText().toString());
     }
 }

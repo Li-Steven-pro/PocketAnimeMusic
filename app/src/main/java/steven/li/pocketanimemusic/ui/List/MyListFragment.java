@@ -11,27 +11,15 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.SeekBar;
-import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import API.AnimeThemeAPI;
-import Model.Anime;
 import steven.li.pocketanimemusic.AnimeListAdapter;
 import steven.li.pocketanimemusic.AnimeViewModel;
 import steven.li.pocketanimemusic.AppActivity;
 import steven.li.pocketanimemusic.R;
-import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
 
 public class MyListFragment extends Fragment {
 

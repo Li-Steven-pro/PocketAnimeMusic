@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Configuration;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -14,11 +13,8 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import Model.MusicPlayerModel;
 import Model.Song;
@@ -40,7 +36,7 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener, AudioManager.OnAudioFocusChangeListener {
 
-
+    // Set all Broadcast Event Receiver Name
     public static final String BROADCAST_ADD_PLAYLIST = "pocketanimemusic.musicplayer.add_playlist";
     public static final String BROADCAST_PLAY = "pocketanimemusic.musicplayer.play";
     public static final String BROADCAST_NEXT = "pocketanimemusic.musicplayer.next";
@@ -52,19 +48,24 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     public static final String BROADCAST_TOGGLE_REPEAT = "pocketanimemusic.musicplayer.repeat";
     public static final String BROADCAST_TOGGLE_SHUFFLE = "pocketanimemusic.musicplayer.shuffle";
 
+    // Broadcast SENT
+    public static final String NOTIFICATION_STATUS = "pocketanimemusic.musicplayer.notify_status";
 
-    public static final String NOTIFICATION_PLAY = "pocketanimemusic.musicplayer.notify_play";
-    public static final String NOTIFICATION_ADD_PLAYLIST = "pocketanimemusic.musicplayer.notify_add_playlist";
-    public static final String NOTIFICATION_NO_SONG_IN_QUEUE = "pocketanimemusic.musicplayer.notify_no_song_in_queue";
-
+    // STATE (BUFFERING, PLAYING, PAUSING)
     private int status;
     private MediaPlayer mediaPlayer;
     private ArrayList<Song> listSong;
+    // Position in the queue
     private int position = 0;
+    // Position in the song
     private int resumePosition = 0;
+    // TODO : Implement shuffle features
     private boolean shuffle = false;
     private AudioManager audioManager;
 
+    /**
+     * Bind the service
+     */
     public class MusicBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
@@ -89,6 +90,10 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         initMusicPlayer();
     }
 
+    /**
+     * Prepare the mediaPlayer to receive songs
+     * Set broadcast receivers
+     */
     private void initMusicPlayer(){
         mediaPlayer = new MediaPlayer();
         //Set up MediaPlayer event listeners
@@ -134,6 +139,10 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         listSong.add(song);
     }
 
+    /**
+     * Reset the media player to play song
+     * Play song in the list using "position"
+     */
     private void playQueue(){
         if(listSong.size() > 0){
             try{
@@ -156,6 +165,9 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         }
     }
 
+    /**
+     * Play or resume the song
+     */
     @Override
     public void play() {
         if (!mediaPlayer.isPlaying()) {
@@ -170,6 +182,9 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         }
     }
 
+    /**
+     * Pause the song
+     */
     @Override
     public void pause() {
         if (mediaPlayer.isPlaying()) {
@@ -180,6 +195,10 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         }
     }
 
+    /**
+     * Set the next song
+     * and reset the media player
+     */
     @Override
     public void next() {
         if (position < listSong.size()-1) {
@@ -203,12 +222,23 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         playQueue();
     }
 
+    /**
+     * Get duration of the song if the song is ready
+     * @return duration of the song
+     */
     @Override
     public int getDuration() {
-        return 0;
-
+        if(status != MusicPlayerModel.BUFFERING){
+            return mediaPlayer.getDuration();
+        }else{
+            return 0;
+        }
     }
 
+    /**
+     * Get current position in the song if the song is playing
+     * @return current position in the song
+     */
     @Override
     public int getPosition() {
         if(status != MusicPlayerModel.BUFFERING){
@@ -236,6 +266,11 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         return mediaPlayer.isPlaying();
     }
 
+    /**
+     * Play the next song in the queue after the song is played
+     * Set the position 0 if the song is the last
+     * @param mp
+     */
     @Override
     public void onCompletion(MediaPlayer mp) {
         if(position < listSong.size()-1){
@@ -247,6 +282,22 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         }
     }
 
+    /**
+     * When the song is ready, play it
+     * @param mp
+     */
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        status = MusicPlayerModel.PLAYING;
+        broadcastChangeStatus();
+        mp.start();
+
+    }
+
+    /**
+     * TODO : implement background controls
+     * @param focusState
+     */
     @Override
     public void onAudioFocusChange(int focusState) {
         switch (focusState) {
@@ -302,13 +353,7 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         return false;
     }
 
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        status = MusicPlayerModel.PLAYING;
-        broadcastChangeStatus();
-        mp.start();
 
-    }
 
     @Override
     public void onSeekComplete(MediaPlayer mp) {
@@ -334,6 +379,9 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
 
     //BroadcastSection
 
+    /**
+     * Register Broadcast Receiver
+     */
     private void registerAllBroadcastReceiver(){
         registerAddQueueReceiver();
         registerPlayReceiver();
@@ -344,6 +392,10 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         registerRepeatReceiver();
         registerShuffleReceiver();
     }
+
+    /**
+     * Unregister Broadcast Receiver
+     */
     private void unregisterAllBroadcastReceiver(){
         unregisterReceiver(addQueue);
         unregisterReceiver(playMusic);
@@ -460,10 +512,12 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         registerReceiver(toggleShuffle, filter);
     }
 
-
+    /**
+     * Send information about the music service using ModelPlayerModel
+     */
     private void broadcastChangeStatus(){
         Intent intent = new Intent();
-        intent.setAction(NOTIFICATION_PLAY);
+        intent.setAction(NOTIFICATION_STATUS);
         MusicPlayerModel musicPlayerModel = new MusicPlayerModel(status, listSong.get(position));
         musicPlayerModel.setSongList(listSong);
         musicPlayerModel.setPosition(position);

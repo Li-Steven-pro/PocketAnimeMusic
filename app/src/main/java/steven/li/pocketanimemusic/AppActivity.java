@@ -16,10 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -71,23 +67,12 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         // On the select listener, add the method that will change the current fragment
         navView.setOnNavigationItemSelectedListener(item -> updateMainFragment(item.getItemId()));
 
-        /*
-        Default configuration from BottomNavActivity
-        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_list, R.id.navigation_play, R.id.navigation_browse)
-                .build();
-        NavHostFragment navHostFragment= (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-        NavController navController = navHostFragment.getNavController();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        NavigationUI.setupWithNavController(navView, navController);
-        */
-
         // Get the the name which will use in the API
         String pseudo = getIntent().getStringExtra("anilistName");
         // Call the API to get the anilist list of the user
         new AnimeThemeAPI(pseudo,this).execute();
         // Register Notification event
-        registerNotificationPlayReceiver();
+        registerNotificationStatusReceiver();
     }
 
     @Override
@@ -98,6 +83,8 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
             bindService(musicPlayerIntent, musicServiceConnection, Context.BIND_AUTO_CREATE);
             startService(musicPlayerIntent);
         }
+
+        // Seekbar data dedicated thread
         musicRun = new Runnable() {
             @Override
             public void run() {
@@ -118,6 +105,11 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         new Thread(musicRun).start();
     }
 
+    /**
+     * Update the fragment view using bottom view navigation
+     * @param itemId
+     * @return
+     */
     private boolean updateMainFragment(int itemId) {
         Fragment fragment = null;
         switch (itemId){
@@ -150,7 +142,9 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         model.setAnimeList(animeList);
     }
 
-
+    /**
+     * ServiceConnection for binding the MusicPlayerService
+     */
     private ServiceConnection musicServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service){
@@ -168,7 +162,10 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         }
     };
 
-    private BroadcastReceiver notificationPlay = new BroadcastReceiver() {
+    /**
+     * BroadcastReceiver which catch status of music player
+     */
+    private BroadcastReceiver notificationStatus = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             MusicPlayerModel mpModel = (MusicPlayerModel) intent.getSerializableExtra(MusicPlayerModel.INTENT_PARAM);
@@ -180,11 +177,11 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(notificationPlay);
+        unregisterReceiver(notificationStatus);
     }
 
-    private void registerNotificationPlayReceiver(){
-        IntentFilter filter = new IntentFilter(MusicPlayerService.NOTIFICATION_PLAY);
-        registerReceiver(notificationPlay, filter);
+    private void registerNotificationStatusReceiver(){
+        IntentFilter filter = new IntentFilter(MusicPlayerService.NOTIFICATION_STATUS);
+        registerReceiver(notificationStatus, filter);
     }
 }

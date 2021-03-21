@@ -1,20 +1,12 @@
 package steven.li.pocketanimemusic.ui.Play;
 
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.media.AudioAttributes;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.os.Handler;
-import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +15,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import Model.MusicPlayerModel;
-import Model.Song;
+
 import steven.li.pocketanimemusic.AppActivity;
 import steven.li.pocketanimemusic.MusicPlayerViewModel;
 import steven.li.pocketanimemusic.R;
@@ -118,6 +109,7 @@ public class MusicPlayerFragment extends Fragment {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });*/
+        // Set the event play on the button play
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,7 +117,7 @@ public class MusicPlayerFragment extends Fragment {
                 mActivity.sendBroadcast(broadcastIntent);
             }
         });
-
+        // Set the event skip song on the button next
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -134,6 +126,7 @@ public class MusicPlayerFragment extends Fragment {
             }
         });
 
+        // Set the event play previous song on the button prev
         btnPrev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -142,6 +135,7 @@ public class MusicPlayerFragment extends Fragment {
             }
         });
 
+        // Set the event pause song on the button pause
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -149,6 +143,8 @@ public class MusicPlayerFragment extends Fragment {
                 mActivity.sendBroadcast(broadcastIntent);
             }
         });
+
+        // Set the event toggle repeat song on the button repeat
         btnRepeat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,6 +152,8 @@ public class MusicPlayerFragment extends Fragment {
                 mActivity.sendBroadcast(broadcastIntent);
             }
         });
+
+        // Set the event toggle shuffle songs on the button shuffle
         btnShuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -174,6 +172,11 @@ public class MusicPlayerFragment extends Fragment {
         }
     }
 
+    /**
+     * Convert the mediaplayer duration output into readable duration "00:00", "1:30"
+     * @param duration
+     * @return readable format
+     */
     private String converFormat(int duration) {
         long minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS);
         long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS)

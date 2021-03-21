@@ -1,7 +1,6 @@
 package API;
 
 import android.os.AsyncTask;
-import android.widget.ListView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,21 +15,28 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 import Model.Anime;
-import steven.li.pocketanimemusic.AnimeListAdapter;
 
 public class AnimeThemeAPI extends AsyncTask<String, Void, JSONObject>
 {
+    /**
+     * Implement this method as callback when calling the AnimeThemeAPI
+     */
     public interface OnAnimesListener{
         void onAnimesCompleted(ArrayList<Anime> animeList);
     }
 
     URL url;
+    // List anime
     ArrayList<Anime> animeList;
     private OnAnimesListener mListener;
 
+    /**
+     * API to get anime and associated songs using anilist pseudo
+     * @param pseudo animelist Pseudo
+     * @param listener callback that will be executed at the end of process
+     */
     public AnimeThemeAPI(String pseudo, OnAnimesListener listener){
         mListener = listener;
         try {
@@ -45,6 +51,7 @@ public class AnimeThemeAPI extends AsyncTask<String, Void, JSONObject>
         HttpURLConnection urlConnection;
         JSONObject json = null;
         try {
+            // Classic http request
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
@@ -53,18 +60,16 @@ public class AnimeThemeAPI extends AsyncTask<String, Void, JSONObject>
         } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
-        System.out.println("Success get json");
         return json;
     }
 
     private String readStream(InputStream is) throws IOException {
         StringBuilder sb = new StringBuilder();
-        // Convert it as data
+        // Convert it as Json not an array of Json
         sb.append("{\"data\":");
         BufferedReader r = new BufferedReader(new InputStreamReader(is),10000);
         for (String line = r.readLine(); line != null; line =r.readLine()){
             sb.append(line);
-            System.out.println(line);
         }
         sb.append('}');
         is.close();
@@ -78,20 +83,21 @@ public class AnimeThemeAPI extends AsyncTask<String, Void, JSONObject>
         try {
             // For each object in the json
             for(int i = 0; i< ((JSONArray) jsonObject.getJSONArray("data")).length(); i++)
-            //for(int i = 0; i< 3; i++)
             {
+                // Put data in the model
                 anime = new Anime((JSONObject) jsonObject.getJSONArray("data").get(i));
                 animeList.add(anime);
-                // Add url in the adaptor vector
-                //animeListAdapter.add((anime));
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
         if(mListener != null){
+            // Execute the callback when the list is completed
             mListener.onAnimesCompleted(animeList);
         }
     }
+
+    //TODO : Implement more request
 
 
 }
