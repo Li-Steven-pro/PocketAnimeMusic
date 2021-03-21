@@ -7,9 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceActivity;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,7 +21,16 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Map;
 
 import API.AnimeThemeAPI;
 import Model.Anime;
@@ -51,6 +62,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         setContentView(R.layout.activity_main);
         BottomNavigationView navView = findViewById(R.id.nav_view);
 
+
         listFragment = new MyListFragment();
         browseFragment = new BrowseFragment();
         playFragment = new MusicPlayerFragment();
@@ -68,9 +80,23 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         navView.setOnNavigationItemSelectedListener(item -> updateMainFragment(item.getItemId()));
 
         // Get the the name which will use in the API
+
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String anilist = sharedPreferences.getString("Anilist", "");
         String pseudo = getIntent().getStringExtra("anilistName");
-        // Call the API to get the anilist list of the user
-        new AnimeThemeAPI(pseudo,this).execute();
+
+        if(pseudo.equals(anilist)){
+            loading(pseudo);
+        }else{
+            // Call the API to get the anilist list of the user
+            new AnimeThemeAPI(pseudo,this).execute();
+            editor.putString("Anilist", pseudo);
+            editor.apply();
+        }
+
+
         // Register Notification event
         registerNotificationStatusReceiver();
     }
@@ -140,6 +166,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
     @Override
     public void onAnimesCompleted(ArrayList<Anime> animeList) {
         model.setAnimeList(animeList);
+        save(animeList);
     }
 
     /**
@@ -151,14 +178,14 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
             musicPlayer = binder.getService();
             serviceBound = true;
-            Toast.makeText(AppActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(AppActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceBound = true;
-            Toast.makeText(AppActivity.this, "Service Unbound", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(AppActivity.this, "Service Unbound", Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -183,5 +210,36 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
     private void registerNotificationStatusReceiver(){
         IntentFilter filter = new IntentFilter(MusicPlayerService.NOTIFICATION_STATUS);
         registerReceiver(notificationStatus, filter);
+    }
+    
+    private void save(ArrayList<Anime> animeList){
+        try {
+            FileOutputStream fops = openFileOutput("AnimeList.data", MODE_PRIVATE);
+            ObjectOutput os = new ObjectOutputStream(fops);
+            os.writeObject(animeList);
+            fops.close();
+            Toast.makeText(AppActivity.this, "Save your anime list", Toast.LENGTH_SHORT).show();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void loading(String user){
+        try{
+            FileInputStream fis = openFileInput("AnimeList.data");
+            ObjectInputStream is = new ObjectInputStream(fis);
+            onAnimesCompleted((ArrayList<Anime>) is.readObject());
+            Toast.makeText(AppActivity.this, "Anime list loaded from file", Toast.LENGTH_SHORT).show();
+            is.close();
+            fis.close();
+
+        } catch (FileNotFoundException e) {
+            new AnimeThemeAPI(user,this).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
