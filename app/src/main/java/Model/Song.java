@@ -39,4 +39,12 @@ public class Song implements Serializable {
         }
         return "";
     }
+
+    public String getTitle(){
+        return title;
+    }
+    public String getArtist(){
+        return artist;
+    }
 }
+

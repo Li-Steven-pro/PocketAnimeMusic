@@ -1,31 +1,38 @@
 package steven.li.pocketanimemusic.service.mediaplayer;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import Model.MusicPlayerModel;
 import Model.Song;
 
 interface IMusicPlayerService{
     void stop();
     void play();
     void pause();
-    long getDuration();
-    long getPosition();
+    int getDuration();
+    int getPosition();
+    void seekTo(int pos);
+    void next();
+    void prev();
     void playNow(Song song);
-    void see(long pos);
     boolean isPlaying();
 
 }
@@ -33,23 +40,48 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener, AudioManager.OnAudioFocusChangeListener {
 
+
+    public static final String BROADCAST_ADD_PLAYLIST = "pocketanimemusic.musicplayer.add_playlist";
+    public static final String BROADCAST_PLAY = "pocketanimemusic.musicplayer.play";
+    public static final String BROADCAST_NEXT = "pocketanimemusic.musicplayer.next";
+    public static final String BROADCAST_PREV = "pocketanimemusic.musicplayer.prev";
+    public static final String BROADCAST_STOP = "pocketanimemusic.musicplayer.stop";
+    public static final String BROADCAST_PAUSE = "pocketanimemusic.musicplayer.pause";
+    public static final String BROADCAST_SEEK_TO = "pocketanimemusic.musicplayer.seek_to";
+    public static final String INTENT_BROADCAST_SEEK_TO = "pocketanimemusic.musicplayer.seek_to.intent_param";
+    public static final String BROADCAST_TOGGLE_REPEAT = "pocketanimemusic.musicplayer.repeat";
+    public static final String BROADCAST_TOGGLE_SHUFFLE = "pocketanimemusic.musicplayer.shuffle";
+
+
+    public static final String NOTIFICATION_PLAY = "pocketanimemusic.musicplayer.notify_play";
+    public static final String NOTIFICATION_ADD_PLAYLIST = "pocketanimemusic.musicplayer.notify_add_playlist";
+    public static final String NOTIFICATION_NO_SONG_IN_QUEUE = "pocketanimemusic.musicplayer.notify_no_song_in_queue";
+
+    private int status;
     private MediaPlayer mediaPlayer;
-    private boolean isPlayerReady = false;
-    private List<Song> listSong;
+    private ArrayList<Song> listSong;
     private int position = 0;
     private int resumePosition = 0;
+    private boolean shuffle = false;
     private AudioManager audioManager;
 
-    public class LocalBinder extends Binder {
+    public class MusicBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }
     }
-    private final IBinder iBinder = new LocalBinder();
+    private final IBinder iBinder = new MusicBinder();
 
     @Override
     public IBinder onBind(Intent intent) {
         return iBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        mediaPlayer.stop();
+        mediaPlayer.release();
+        return false;
     }
 
     @Override
@@ -60,6 +92,8 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     private void initMusicPlayer(){
         mediaPlayer = new MediaPlayer();
         //Set up MediaPlayer event listeners
+        listSong = new ArrayList<Song>();
+        status = MusicPlayerModel.BUFFERING;
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
         mediaPlayer.setOnPreparedListener(this);
@@ -67,41 +101,50 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         mediaPlayer.setOnSeekCompleteListener(this);
         mediaPlayer.setOnInfoListener(this);
         mediaPlayer.reset();
-
+        mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayer.setAudioAttributes(
                 new AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .setUsage(AudioAttributes.USAGE_MEDIA)
                         .build()
         );
+        registerAllBroadcastReceiver();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        try{
-            listSong = (List<Song>) intent.getSerializableExtra("listSong");
-        }catch ( NullPointerException e){
-            e.printStackTrace();
-            stopSelf();
-        }
-        if(requestAudioFocus() == false){
-            stopSelf();
-        }
-        if (listSong != null){
-            initMusicPlayer();
-            playQueue();
-        }
         return START_STICKY;
     }
 
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
+        unregisterAllBroadcastReceiver();
+    }
 
+    public void setListSong(ArrayList<Song> songs){
+        listSong = songs;
+    }
+
+    public void addToListSong(Song song){
+        listSong.add(song);
+    }
 
     private void playQueue(){
-        try{
-            mediaPlayer.setDataSource(listSong.get(position).getWebmURL());
-            mediaPlayer.prepareAsync();
-        }catch (IOException e){
-            e.printStackTrace();
+        if(listSong.size() > 0){
+            try{
+                mediaPlayer.reset();
+                mediaPlayer.setDataSource(listSong.get(position).getWebmURL());
+                mediaPlayer.prepareAsync();
+                status = MusicPlayerModel.BUFFERING;
+                broadcastChangeStatus();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -116,8 +159,14 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     @Override
     public void play() {
         if (!mediaPlayer.isPlaying()) {
-            mediaPlayer.seekTo(resumePosition);
-            mediaPlayer.start();
+            if(resumePosition == 0){
+                playQueue();
+            }else{
+                mediaPlayer.seekTo(resumePosition);
+                mediaPlayer.start();
+                status = MusicPlayerModel.PLAYING;
+                broadcastChangeStatus();
+            }
         }
     }
 
@@ -126,17 +175,48 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             resumePosition = mediaPlayer.getCurrentPosition();
+            status = MusicPlayerModel.PAUSE;
+            broadcastChangeStatus();
         }
     }
 
     @Override
-    public long getDuration() {
-        return 0;
+    public void next() {
+        if (position < listSong.size()-1) {
+            position += 1;
+
+        } else {
+            position = 0;
+        }
+        resumePosition = 0;
+        playQueue();
     }
 
     @Override
-    public long getPosition() {
+    public void prev() {
+        if (position <= 0) {
+            position = listSong.size() - 1;
+        } else {
+            position -= 1;
+        }
+        resumePosition = 0;
+        playQueue();
+    }
+
+    @Override
+    public int getDuration() {
         return 0;
+
+    }
+
+    @Override
+    public int getPosition() {
+        if(status != MusicPlayerModel.BUFFERING){
+            resumePosition = mediaPlayer.getCurrentPosition();
+            return resumePosition;
+        }else{
+            return 0;
+        }
     }
 
     @Override
@@ -145,26 +225,26 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     }
 
     @Override
-    public void see(long pos) {
-
+    public void seekTo(int pos) {
+        if(mediaPlayer.isPlaying()){
+            mediaPlayer.seekTo(pos);
+        }
     }
 
     @Override
     public boolean isPlaying() {
-        return false;
+        return mediaPlayer.isPlaying();
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (position < listSong.size()){
+        if(position < listSong.size()-1){
             position += 1;
             resumePosition= 0;
             playQueue();
         }else{
-            mediaPlayer.release();
-            stopSelf();
+            position = 0;
         }
-        Log.d("MusicPS","music_completed" );
     }
 
     @Override
@@ -224,7 +304,10 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        status = MusicPlayerModel.PLAYING;
+        broadcastChangeStatus();
         mp.start();
+
     }
 
     @Override
@@ -232,15 +315,7 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
 
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mediaPlayer != null) {
-            stop();
-            mediaPlayer.release();
-        }
-        removeAudioFocus();
-    }
+
 
     private boolean requestAudioFocus() {
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -257,4 +332,153 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
                 audioManager.abandonAudioFocus(this);
     }
 
+    //BroadcastSection
+
+    private void registerAllBroadcastReceiver(){
+        registerAddQueueReceiver();
+        registerPlayReceiver();
+        registerPauseReceiver();
+        registerPrevReceiver();
+        registerNextReceiver();
+        registerSeekToReceiver();
+        registerRepeatReceiver();
+        registerShuffleReceiver();
+    }
+    private void unregisterAllBroadcastReceiver(){
+        unregisterReceiver(addQueue);
+        unregisterReceiver(playMusic);
+        unregisterReceiver(pauseMusic);
+        unregisterReceiver(nextSong);
+        unregisterReceiver(prevSong);
+        unregisterReceiver(SeekTo);
+        unregisterReceiver(toggleRepeat);
+        unregisterReceiver(toggleShuffle);
+    }
+
+
+    private BroadcastReceiver addQueue = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            System.out.println("add list");
+            Song song = (Song) intent.getSerializableExtra("song");
+            if(song != null){
+                addToListSong(song);
+            }
+        }
+    };
+    private void registerAddQueueReceiver(){
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_ADD_PLAYLIST);
+        registerReceiver(addQueue, filter);
+    }
+
+
+    private BroadcastReceiver playMusic = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            System.out.println("play");
+            play();
+        }
+    };
+
+    private void registerPlayReceiver(){
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_PLAY);
+        registerReceiver(playMusic, filter);
+    }
+
+    private BroadcastReceiver pauseMusic = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            pause();
+        }
+    };
+
+    private void registerPauseReceiver(){
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_PAUSE);
+        registerReceiver(pauseMusic, filter);
+    }
+
+    private BroadcastReceiver nextSong = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            next();
+        }
+    };
+
+    private void registerNextReceiver(){
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_NEXT);
+        registerReceiver(nextSong, filter);
+    }
+
+
+    private BroadcastReceiver SeekTo = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            seekTo(intent.getIntExtra(MusicPlayerService.INTENT_BROADCAST_SEEK_TO,resumePosition));
+        }
+    };
+
+    private void registerSeekToReceiver() {
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_SEEK_TO);
+        registerReceiver(SeekTo, filter);
+    }
+
+    private BroadcastReceiver prevSong = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            prev();
+        }
+    };
+
+    private void registerPrevReceiver() {
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_PREV);
+        registerReceiver(prevSong, filter);
+    }
+
+    private BroadcastReceiver toggleRepeat = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mediaPlayer.setLooping(!mediaPlayer.isLooping());
+            broadcastChangeStatus();
+        }
+    };
+
+    private void registerRepeatReceiver() {
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_TOGGLE_REPEAT);
+        registerReceiver(toggleRepeat, filter);
+    }
+
+    private BroadcastReceiver toggleShuffle = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            shuffle = !shuffle;
+            broadcastChangeStatus();
+        }
+    };
+
+    private void registerShuffleReceiver() {
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_TOGGLE_SHUFFLE);
+        registerReceiver(toggleShuffle, filter);
+    }
+
+
+    private void broadcastChangeStatus(){
+        Intent intent = new Intent();
+        intent.setAction(NOTIFICATION_PLAY);
+        MusicPlayerModel musicPlayerModel = new MusicPlayerModel(status, listSong.get(position));
+        musicPlayerModel.setSongList(listSong);
+        musicPlayerModel.setPosition(position);
+        musicPlayerModel.setLooping(mediaPlayer.isLooping());
+        musicPlayerModel.setShuffle(shuffle);
+        musicPlayerModel.setResumePosition(resumePosition);
+        switch (status){
+            case MusicPlayerModel.BUFFERING:
+                break;
+            case MusicPlayerModel.PAUSE:
+            case MusicPlayerModel.PLAYING:
+                musicPlayerModel.setDuration(mediaPlayer.getDuration());
+                break;
+        }
+        intent.putExtra(musicPlayerModel.INTENT_PARAM,musicPlayerModel);
+        sendBroadcast(intent);
+    }
 }

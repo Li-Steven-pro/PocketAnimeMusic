@@ -1,0 +1,7 @@
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.andrroid.com/apk/res-auto"
+    android:duration="1">
+    <trransition
+        class="transition.PlayButtonTranstion"
+        app:mode="play|pause"/>
+</transitionSet>

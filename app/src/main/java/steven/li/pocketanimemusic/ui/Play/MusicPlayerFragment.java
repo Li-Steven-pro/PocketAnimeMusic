@@ -1,132 +1,50 @@
 package steven.li.pocketanimemusic.ui.Play;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Handler;
+import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import Model.MusicPlayerModel;
+import Model.Song;
+import steven.li.pocketanimemusic.AppActivity;
+import steven.li.pocketanimemusic.MusicPlayerViewModel;
 import steven.li.pocketanimemusic.R;
+import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link MusicPlayerFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MusicPlayerFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
+    private TextView titleLabel, artistLabel;
     private TextView playerPosition, playerDuration;
     private SeekBar seekBar;
-    private ImageView btnPrev, btnPlay, btnPause, btnNext;
+    private ImageView btnPrev, btnPlay, btnPause, btnNext, btnShuffle, btnRepeat;
 
-    private MediaPlayer mediaPlayer;
-    private Runnable runnable;
-    private Handler handler = new Handler();
+    private MusicPlayerViewModel mpModel;
+    private AppActivity mActivity;
+
     public MusicPlayerFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MusicPlayerFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MusicPlayerFragment newInstance(String param1, String param2) {
-        MusicPlayerFragment fragment = new MusicPlayerFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioAttributes(
-                new AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .build()
-        );
-        try{
-            mediaPlayer.setDataSource("https://animethemes.moe/video/100Man-OP1.webm");
-            mediaPlayer.prepareAsync();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-
-            @Override
-            public void onPrepared(MediaPlayer player) {
-                player.start();
-            }
-        });
-        /*
-        runnable = new Runnable(){
-            @Override
-            public void run() {
-                seekBar.setProgress(mediaPlayer.getCurrentPosition());
-                handler.postDelayed(this,500);
-            }
-        };
-        int duration = mediaPlayer.getDuration();
-        String sDuration = converFormat(duration);
-        playerDuration.setText(sDuration);
-
-        btnPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                btnPlay.setVisibility(View.GONE);
-                btnPause.setVisibility(View.VISIBLE);
-                mediaPlayer.start();
-            }
-        });
-
-        try {
-            mediaPlayer.prepare();
-            mediaPlayer.seekTo(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-    }
-
-    private String converFormat(int duration){
-        return String.format("%02d:%02d",
-                TimeUnit.MILLISECONDS.toMinutes(duration),
-                TimeUnit.MILLISECONDS.toSeconds(duration),
-                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)));
     }
 
     @Override
@@ -134,6 +52,8 @@ public class MusicPlayerFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_music_player, container, false);
+        titleLabel = view.findViewById(R.id.mp_song_title);
+        artistLabel = view.findViewById(R.id.mp_song_artist);
         playerPosition = view.findViewById(R.id.player_position);
         playerDuration = view.findViewById(R.id.player_duration);
         seekBar = view.findViewById(R.id.seekBar);
@@ -141,15 +61,125 @@ public class MusicPlayerFragment extends Fragment {
         btnPrev = view.findViewById(R.id.btn_prev);
         btnPlay = view.findViewById(R.id.btn_play);
         btnPause = view.findViewById(R.id.btn_pause);
+        btnShuffle = view.findViewById(R.id.btn_shuffle);
+        btnRepeat = view.findViewById(R.id.btn_repeat);
+
+        mpModel = new ViewModelProvider(requireActivity()).get(MusicPlayerViewModel.class);
+        mpModel.getMusicPlayer().observe(getViewLifecycleOwner(), item -> {
+            titleLabel.setText(item.getSong().getTitle());
+            artistLabel.setText(item.getSong().getArtist());
+            playerPosition.setText(converFormat(item.getResumePosition()));
+            if(item.getLooping()){
+                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_on_24);
+            }else{
+                btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_24);
+            }
+            if(item.getShuffle()){
+                btnShuffle.setImageResource(R.drawable.ic_baseline_shuffle_on_24);
+            }else{
+                btnShuffle.setImageResource(R.drawable.ic_baseline_shuffle_24);
+            }
+            switch (item.getStatus()){
+                case MusicPlayerModel.BUFFERING:
+                    Toast.makeText(mActivity, "Buffering " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    break;
+                case MusicPlayerModel.PAUSE:
+                    btnPause.setVisibility(View.GONE);
+                    btnPlay.setVisibility(View.VISIBLE);
+                    Toast.makeText(mActivity, "Pausing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    seekBar.setMax(item.getDuration());
+                    playerDuration.setText(converFormat(item.getDuration()));
+                    break;
+                case MusicPlayerModel.PLAYING:
+                    btnPause.setVisibility(View.VISIBLE);
+                    btnPlay.setVisibility(View.INVISIBLE);
+                    Toast.makeText(mActivity, "Playing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    seekBar.setMax(item.getDuration());
+                    playerDuration.setText(converFormat(item.getDuration()));
+                    break;
+            }
+        });
+        mpModel.getCurrectPosition().observe(getViewLifecycleOwner(), item ->{
+            seekBar.setProgress(item);
+            playerPosition.setText(converFormat(item));
+        });
+        //TODO : Solve the issues with the seekTo feature
+        /*
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_SEEK_TO);
+                broadcastIntent.putExtra(MusicPlayerService.INTENT_BROADCAST_SEEK_TO, progress);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });*/
+        btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_PLAY);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+        });
+
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_NEXT);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+        });
+
+        btnPrev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_PREV);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+        });
+
+        btnPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_PAUSE);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+        });
+        btnRepeat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_TOGGLE_REPEAT);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+        });
+        btnShuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_TOGGLE_SHUFFLE);
+                mActivity.sendBroadcast(broadcastIntent);
+            }
+        });
         return view;
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof AppActivity){
+            mActivity = (AppActivity) context;
         }
     }
+
+    private String converFormat(int duration) {
+        long minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS);
+        long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS)
+                - minutes * TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES);
+
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
 }

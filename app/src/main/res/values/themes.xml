@@ -22,4 +22,8 @@
     <style name="Theme.PocketAnimeMusic.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.PocketAnimeMusic.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="SeekbarTheme" parent="Widget.AppCompat.SeekBar">
+        <item name="colorAccent">@color/black</item>
+    </style>
 </resources>
