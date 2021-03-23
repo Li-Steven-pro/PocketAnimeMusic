@@ -3,11 +3,18 @@ package steven.li.pocketanimemusic.ui.Browse;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import steven.li.pocketanimemusic.AnimeListAdapter;
+import steven.li.pocketanimemusic.AnimeListRecyclerViewAdapter;
+import steven.li.pocketanimemusic.AnimeViewModel;
+import steven.li.pocketanimemusic.MalAnimeViewModel;
 import steven.li.pocketanimemusic.R;
 
 /**
@@ -25,7 +32,8 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-
+    private MalAnimeViewModel model;
+    private RecyclerView rv;
     public BrowseFragment() {
         // Required empty public constructor
     }
@@ -61,6 +69,18 @@ public class BrowseFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_browse, container, false);
+        View view = inflater.inflate(R.layout.fragment_browse, container, false);
+        rv = view.findViewById(R.id.recyclerView);
+        model = new ViewModelProvider(requireActivity()).get(MalAnimeViewModel.class);
+        model.getAnimeList().observe(getViewLifecycleOwner(), item ->{
+            // Instanciate the adapter
+            AnimeListRecyclerViewAdapter animeListAdapter= new AnimeListRecyclerViewAdapter(view.getContext(),item);
+            // Set the adapter in the list view
+            rv.setAdapter(animeListAdapter);
+            rv.setLayoutManager(new GridLayoutManager(view.getContext(), 3));
+            // Notify the adapter that he needs to update the UI.
+            animeListAdapter.notifyDataSetChanged();
+        });
+        return view;
     }
 }

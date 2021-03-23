@@ -33,7 +33,9 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import API.AnimeThemeAPI;
+import API.JikanAPI;
 import Model.Anime;
+import Model.MalAnime;
 import Model.MusicPlayerModel;
 import Model.Song;
 import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
@@ -41,13 +43,14 @@ import steven.li.pocketanimemusic.ui.Browse.BrowseFragment;
 import steven.li.pocketanimemusic.ui.List.MyListFragment;
 import steven.li.pocketanimemusic.ui.Play.MusicPlayerFragment;
 
-public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAnimesListener {
+public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAnimesListener, JikanAPI.OnMalAnimesListener {
 
     Fragment listFragment;
     Fragment playFragment;
     Fragment browseFragment;
     Toolbar actionBar;
     private AnimeViewModel model;
+    private MalAnimeViewModel malmodel;
 
     private MusicPlayerService musicPlayer;
     private Intent musicPlayerIntent;
@@ -73,6 +76,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
 
         // Set the modelView to set the animeList later
         model = new ViewModelProvider(this).get(AnimeViewModel.class);
+        malmodel = new ViewModelProvider(this).get(MalAnimeViewModel.class);
         // Set the view model where the information of music player is stored
         new ViewModelProvider(this).get(MusicPlayerViewModel.class);
 
@@ -96,7 +100,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
             editor.apply();
         }
 
-
+        new JikanAPI(this).execute();
         // Register Notification event
         registerNotificationStatusReceiver();
     }
@@ -241,5 +245,10 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onMalAnimesCompleted(ArrayList<MalAnime> animeList) {
+        malmodel.setAnimeList(animeList);
     }
 }
