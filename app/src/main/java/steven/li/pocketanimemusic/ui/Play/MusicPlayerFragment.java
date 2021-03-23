@@ -15,6 +15,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+
 import java.util.concurrent.TimeUnit;
 
 import Model.MusicPlayerModel;
@@ -33,6 +35,8 @@ public class MusicPlayerFragment extends Fragment {
 
     private MusicPlayerViewModel mpModel;
     private AppActivity mActivity;
+
+    private BottomSheetBehavior behavior;
 
     public MusicPlayerFragment() {
         // Required empty public constructor
@@ -94,6 +98,9 @@ public class MusicPlayerFragment extends Fragment {
             seekBar.setProgress(item);
             playerPosition.setText(converFormat(item));
         });
+
+        View bottomSheet = view.findViewById(R.id.bottom_sheet);
+        behavior = BottomSheetBehavior.from(bottomSheet);
         //TODO : Solve the issues with the seekTo feature
         /*
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -115,6 +122,7 @@ public class MusicPlayerFragment extends Fragment {
             public void onClick(View v) {
                 Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_PLAY);
                 mActivity.sendBroadcast(broadcastIntent);
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         });
         // Set the event skip song on the button next
