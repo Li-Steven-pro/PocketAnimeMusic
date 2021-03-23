@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import Model.MusicPlayerModel;
 
 import steven.li.pocketanimemusic.AppActivity;
 import steven.li.pocketanimemusic.MusicPlayerViewModel;
+import steven.li.pocketanimemusic.PlayListAdapter;
 import steven.li.pocketanimemusic.R;
 import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
 
@@ -32,6 +34,8 @@ public class MusicPlayerFragment extends Fragment {
     private TextView playerPosition, playerDuration;
     private SeekBar seekBar;
     private ImageView btnPrev, btnPlay, btnPause, btnNext, btnShuffle, btnRepeat;
+    private ListView listView;
+    PlayListAdapter playListAdapter;
 
     private MusicPlayerViewModel mpModel;
     private AppActivity mActivity;
@@ -58,12 +62,16 @@ public class MusicPlayerFragment extends Fragment {
         btnPause = view.findViewById(R.id.btn_pause);
         btnShuffle = view.findViewById(R.id.btn_shuffle);
         btnRepeat = view.findViewById(R.id.btn_repeat);
+        listView = view.findViewById(R.id.songs_list);
 
         mpModel = new ViewModelProvider(requireActivity()).get(MusicPlayerViewModel.class);
         mpModel.getMusicPlayer().observe(getViewLifecycleOwner(), item -> {
             titleLabel.setText(item.getSong().getTitle());
             artistLabel.setText(item.getSong().getArtist());
             playerPosition.setText(converFormat(item.getResumePosition()));
+            playListAdapter = new PlayListAdapter(getContext(), item.getSongList(), getActivity());
+            listView.setAdapter(playListAdapter);
+            playListAdapter.notifyDataSetChanged();
             if(item.getLooping()){
                 btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_on_24);
             }else{
@@ -93,6 +101,7 @@ public class MusicPlayerFragment extends Fragment {
                     playerDuration.setText(converFormat(item.getDuration()));
                     break;
             }
+
         });
         mpModel.getCurrectPosition().observe(getViewLifecycleOwner(), item ->{
             seekBar.setProgress(item);
@@ -122,7 +131,6 @@ public class MusicPlayerFragment extends Fragment {
             public void onClick(View v) {
                 Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_PLAY);
                 mActivity.sendBroadcast(broadcastIntent);
-                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         });
         // Set the event skip song on the button next

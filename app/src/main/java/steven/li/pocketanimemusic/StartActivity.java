@@ -7,7 +7,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.json.JSONException;
+
 import API.AnilistAPI;
+import API.JikanAPI;
 
 public class StartActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -21,7 +24,6 @@ public class StartActivity extends AppCompatActivity implements View.OnClickList
         getAnilistBtn = findViewById(R.id.getAnilistPseudoBtn);
         // Set listener
         getAnilistBtn.setOnClickListener(this);
-
 
     }
 
