@@ -14,6 +14,7 @@ public class Anime implements Serializable {
     private String imageURL;
     private int year;
     private List<Song> listSong;
+    private List<Theme> themes;
 
     public int getMal_id() {
         return mal_id;
@@ -35,8 +36,12 @@ public class Anime implements Serializable {
         return listSong;
     }
 
+    public List<Theme> getThemes(){
+        return themes;
+    }
 
 
+    public Anime(){}
     public Anime(JSONObject jsonobject){
         titles = new ArrayList<String>();
         listSong = new ArrayList<Song>();
@@ -68,6 +73,29 @@ public class Anime implements Serializable {
 
         }
         catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void setFromAnimeThemesMoe(JSONObject anime){
+        try {
+            mal_id = anime.getInt("id");
+            titles = new ArrayList<String>();
+            titles.add(anime.getString("name"));
+            year = anime.getInt("year");
+
+            themes = new ArrayList<Theme>();
+            JSONArray jArrayThemes = (JSONArray) anime.getJSONArray("themes");
+            if (jArrayThemes != null){
+                for(int i = 0; i < jArrayThemes.length() ; i++){
+                    Theme theme = new Theme();
+                    theme.setFromAnimeThemesMoe((JSONObject) jArrayThemes.get(i));
+                    themes.add(theme);
+                }
+            }
+
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }

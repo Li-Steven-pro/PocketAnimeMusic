@@ -86,7 +86,8 @@ public class JikanAPI extends AsyncTask<String, Void, JSONObject>{
             JSONArray results = jsonObject.getJSONArray("results");;
             for(int i = 0; i< results.length(); i++){
                 JSONObject object = results.getJSONObject(i);
-                MalAnime malAnime = new MalAnime(object.getInt("mal_id"));
+                MalAnime malAnime = new MalAnime();
+                malAnime.setMal_id(object.getInt("mal_id"));
                 malAnime.setImage_url(object.getString("image_url"));
                 malAnime.setTitle(object.getString("title"));
                 malAnime.setUrl(object.getString("url"));
