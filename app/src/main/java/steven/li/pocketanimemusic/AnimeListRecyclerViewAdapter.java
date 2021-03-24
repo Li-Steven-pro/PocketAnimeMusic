@@ -20,17 +20,16 @@ import com.android.volley.toolbox.ImageRequest;
 
 import java.util.List;
 
-import API.JikanAPI;
-import Model.MalAnime;
+import Model.Anime;
 
 public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeViewHolder> {
 
 
-    private List<MalAnime> animes;
+    private List<Anime> animes;
     private Context context;
     private LayoutInflater mLayoutInflater;
 
-    public AnimeListRecyclerViewAdapter(Context context, List<MalAnime> datas ) {
+    public AnimeListRecyclerViewAdapter(Context context, List<Anime> datas ) {
         this.context = context;
         this.animes = datas;
         this.mLayoutInflater = LayoutInflater.from(context);
@@ -53,10 +52,12 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
     @Override
     public void onBindViewHolder(AnimeViewHolder holder, int position) {
         // Cet country in countries via position
-        MalAnime anime = this.animes.get(position);
+        Anime anime = this.animes.get(position);
 
         RequestQueue queue = MySingleton.getInstance(context).getRequestQueue();
         // Set an request using the vector to get the image and set in the imageView
+        //TODO: API IMAGE
+        /*
         String link = anime.getImage_url();
         ImageRequest request = new ImageRequest(link,
                 new Response.Listener<Bitmap>() {
@@ -71,7 +72,7 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
             }
         });
         // Add the image request in the queue
-        queue.add(request);
+        queue.add(request);*/
         holder.getTitleView().setText(anime.getTitle());
     }
 
@@ -92,7 +93,7 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
     // Click on RecyclerView Item.
     private void handleRecyclerItemClick(RecyclerView recyclerView, View itemView) {
         int itemPosition = recyclerView.getChildLayoutPosition(itemView);
-        MalAnime anime  = this.animes.get(itemPosition);
+        Anime anime  = this.animes.get(itemPosition);
 
         //Toast.makeText(this.context, ), Toast.LENGTH_LONG).show();
     }

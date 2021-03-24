@@ -29,7 +29,7 @@ public class JikanAPI extends AsyncTask<String, Void, JSONObject>{
     URL url;
     // List anime
     ArrayList<MalAnime> animeList;
-    String base_url = "https://api.jikan.moe/v3";
+    String base_url = "https://api.jikan.moe/v3/";
     private JikanAPI.OnMalAnimesListener mListener;
 
 
@@ -67,7 +67,7 @@ public class JikanAPI extends AsyncTask<String, Void, JSONObject>{
     }
 
     public void getAnimeById(int id) throws JSONException {
-        String url = base_url + "/anime/"+ Integer.toString(id);
+        String url = base_url + "anime/"+ Integer.toString(id);
         JSONObject jsonObject = doRequest(url);
         String op = jsonObject.getString("opening_themes");
         List<String> ops = Arrays.asList(op.substring(1,op.length()-1).split(",")) ;

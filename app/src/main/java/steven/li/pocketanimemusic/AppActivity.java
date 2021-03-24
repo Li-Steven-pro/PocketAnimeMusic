@@ -43,7 +43,7 @@ import steven.li.pocketanimemusic.ui.Browse.BrowseFragment;
 import steven.li.pocketanimemusic.ui.List.MyListFragment;
 import steven.li.pocketanimemusic.ui.Play.MusicPlayerFragment;
 
-public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAnimesListener, JikanAPI.OnMalAnimesListener {
+public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAnimesListener{
 
     Fragment listFragment;
     Fragment playFragment;
@@ -76,7 +76,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
 
         // Set the modelView to set the animeList later
         model = new ViewModelProvider(this).get(AnimeViewModel.class);
-        malmodel = new ViewModelProvider(this).get(MalAnimeViewModel.class);
+        new ViewModelProvider(this).get(SearchViewModel.class);
         // Set the view model where the information of music player is stored
         new ViewModelProvider(this).get(MusicPlayerViewModel.class);
 
@@ -100,7 +100,6 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
             editor.apply();
         }
 
-        new JikanAPI(this).execute();
         // Register Notification event
         registerNotificationStatusReceiver();
     }
@@ -247,8 +246,4 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         }
     }
 
-    @Override
-    public void onMalAnimesCompleted(ArrayList<MalAnime> animeList) {
-        malmodel.setAnimeList(animeList);
-    }
 }

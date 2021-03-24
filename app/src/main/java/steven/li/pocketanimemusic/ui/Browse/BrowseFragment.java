@@ -11,11 +11,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
+import java.util.List;
+
+import API.AnimeThemesMoeAPI;
+import Model.Anime;
 import steven.li.pocketanimemusic.AnimeListAdapter;
 import steven.li.pocketanimemusic.AnimeListRecyclerViewAdapter;
 import steven.li.pocketanimemusic.AnimeViewModel;
 import steven.li.pocketanimemusic.MalAnimeViewModel;
 import steven.li.pocketanimemusic.R;
+import steven.li.pocketanimemusic.SearchViewModel;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,7 +41,7 @@ public class BrowseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private MalAnimeViewModel model;
+    private SearchViewModel model;
     private RecyclerView rv;
     public BrowseFragment() {
         // Required empty public constructor
@@ -70,8 +79,23 @@ public class BrowseFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_browse, container, false);
+        TextInputLayout textInputLayout = view.findViewById(R.id.searchTextField);
+        MaterialButton btn_search = view.findViewById(R.id.btn_search);
+        model = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
+        btn_search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AnimeThemesMoeAPI(getContext()).search(textInputLayout.getEditText().getText().toString(), new AnimeThemesMoeAPI.OnAnimesListener() {
+                    @Override
+                    public void onAnimesCompleted(List<Anime> animeList) {
+                        model.setAnimeList(animeList);
+                    }
+                });
+
+            }
+        });
+
         rv = view.findViewById(R.id.recyclerView);
-        model = new ViewModelProvider(requireActivity()).get(MalAnimeViewModel.class);
         model.getAnimeList().observe(getViewLifecycleOwner(), item ->{
             // Instanciate the adapter
             AnimeListRecyclerViewAdapter animeListAdapter= new AnimeListRecyclerViewAdapter(view.getContext(),item);
