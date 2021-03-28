@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<AnilistUser
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <UserName
-        android:key="userName"
-        android:title="User name"></UserName>
-
-</AnilistUser>
