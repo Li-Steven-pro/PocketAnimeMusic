@@ -9,4 +9,19 @@
     <string name="anilist_pseudo">Anilist Pseudo :</string>
     <string name="song_list">Song List</string>
     <string name="loremIpsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ut nunc massa. Integer rutrum eget enim a cursus. Aenean bibendum a nibh sed rhoncus. Aenean porttitor a lorem id tincidunt. Suspendisse pretium sit amet mi vitae ultrices. Fusce pulvinar turpis eget nunc pretium malesuada. Integer dictum dui id orci consequat rhoncus. Quisque egestas vulputate faucibus.  In hac habitasse platea dictumst. Proin vel pharetra odio. Vestibulum suscipit enim eget elit cursus vestibulum. Aenean a felis eros. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nulla consectetur velit eget finibus mattis. Integer faucibus gravida lorem sit amet hendrerit. Fusce luctus ex nisi, a interdum dui imperdiet quis. Sed sodales ante ac lorem tincidunt, ut mollis ipsum ullamcorper.  Vivamus vel nibh porta, suscipit ante a, tempus augue. Donec aliquet neque bibendum dolor suscipit, ac bibendum tortor ornare. Integer a ligula tincidunt lacus fringilla imperdiet. Duis cursus odio et urna fringilla, ut eleifend sem condimentum. Mauris nec magna efficitur, porttitor orci in, pharetra leo. Vivamus fringilla odio a lorem laoreet, eu iaculis leo blandit. Maecenas nisl odio, vehicula nec fringilla nec, fermentum et nibh. Mauris blandit nibh leo, sollicitudin malesuada nisl suscipit eget. Nam vitae volutpat turpis. Vestibulum tempus nunc ex, quis sodales ante consequat at. Donec efficitur non tellus finibus volutpat.  Nunc id ex leo. Donec eget nunc dolor. Nam et orci at dui elementum aliquet sed et nunc. Etiam et nisi vel nisl rutrum lacinia. Ut mattis venenatis rhoncus. Praesent tincidunt vitae tortor sollicitudin consequat. Donec nec malesuada sem, a cursus libero.  Vestibulum mi ex, pulvinar sit amet tincidunt non, vehicula non ex. Curabitur vel tristique mauris, vel feugiat ligula. Fusce ac vehicula velit. Nullam in sodales urna. Maecenas viverra sodales nibh, ac euismod urna dignissim eu. In eu aliquet nisi, eu dignissim diam. In et congue tellus. Pellentesque vel ultrices libero. Sed ullamcorper enim vitae quam cursus pretium. Phasellus tincidunt facilisis dui non volutpat. Nulla ut interdum magna. Etiam laoreet sagittis luctus. Praesent nec ante sit amet nunc egestas eleifend. Vestibulum non nisi elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In hac habitasse platea dictumst.</string>
+    <string name="setting">Setting</string>
+
+    <!-- General Preferences -->
+    <string name="dark_mode_title">Dark Mode</string>
+
+    <!-- Preference Titles -->
+    <string name="list_header">Anime Lists</string>
+    <string name="general_header">General</string>
+    <string name="about_header">About</string>
+
+    <!-- List Preferences -->
+    <string name="anilist_title">Your Anilist</string>
+    <string name="mal_title">Your MyAnimeList</string>
+
+
 </resources>
