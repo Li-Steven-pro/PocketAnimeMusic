@@ -18,6 +18,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import Model.Anime;
@@ -29,10 +30,14 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
     private Context context;
     private LayoutInflater mLayoutInflater;
 
-    public AnimeListRecyclerViewAdapter(Context context, List<Anime> datas ) {
+    public AnimeListRecyclerViewAdapter(Context context) {
         this.context = context;
-        this.animes = datas;
+        this.animes = new ArrayList<>();
         this.mLayoutInflater = LayoutInflater.from(context);
+    }
+
+    public void setData(List<Anime> animes){
+        this.animes = animes;
     }
 
     @Override

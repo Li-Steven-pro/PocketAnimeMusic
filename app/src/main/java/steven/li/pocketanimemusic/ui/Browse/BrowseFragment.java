@@ -12,66 +12,25 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
 
 import API.AnimeThemesMoeAPI;
 import Model.Anime;
-import steven.li.pocketanimemusic.AnimeListAdapter;
 import steven.li.pocketanimemusic.AnimeListRecyclerViewAdapter;
-import steven.li.pocketanimemusic.AnimeViewModel;
-import steven.li.pocketanimemusic.MalAnimeViewModel;
 import steven.li.pocketanimemusic.R;
 import steven.li.pocketanimemusic.SearchViewModel;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link BrowseFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class BrowseFragment extends Fragment {
+;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
     private SearchViewModel model;
+
+    AnimeListRecyclerViewAdapter animeListAdapter;
     private RecyclerView rv;
     public BrowseFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment BrowseFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static BrowseFragment newInstance(String param1, String param2) {
-        BrowseFragment fragment = new BrowseFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -96,12 +55,15 @@ public class BrowseFragment extends Fragment {
         });
 
         rv = view.findViewById(R.id.recyclerView);
+        // Instanciate the adapter
+        animeListAdapter= new AnimeListRecyclerViewAdapter(view.getContext());
+        // Set the adapter in the list view
+        rv.setAdapter(animeListAdapter);
+        rv.setLayoutManager(new GridLayoutManager(view.getContext(), 3));
+
         model.getAnimeList().observe(getViewLifecycleOwner(), item ->{
-            // Instanciate the adapter
-            AnimeListRecyclerViewAdapter animeListAdapter= new AnimeListRecyclerViewAdapter(view.getContext(),item);
-            // Set the adapter in the list view
-            rv.setAdapter(animeListAdapter);
-            rv.setLayoutManager(new GridLayoutManager(view.getContext(), 3));
+            // Set the research results
+            animeListAdapter.setData(item);
             // Notify the adapter that he needs to update the UI.
             animeListAdapter.notifyDataSetChanged();
         });
