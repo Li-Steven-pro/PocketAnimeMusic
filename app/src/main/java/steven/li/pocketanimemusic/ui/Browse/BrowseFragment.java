@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
@@ -26,7 +27,6 @@ public class BrowseFragment extends Fragment {
 ;
 
     private SearchViewModel model;
-
     AnimeListRecyclerViewAdapter animeListAdapter;
     private RecyclerView rv;
     public BrowseFragment() {
@@ -40,10 +40,13 @@ public class BrowseFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_browse, container, false);
         TextInputLayout textInputLayout = view.findViewById(R.id.searchTextField);
         MaterialButton btn_search = view.findViewById(R.id.btn_search);
+        CircularProgressIndicator progressSearch = view.findViewById(R.id.progress_search);
+
         model = new ViewModelProvider(requireActivity()).get(SearchViewModel.class);
         btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                progressSearch.setVisibility(View.VISIBLE);
                 new AnimeThemesMoeAPI(getContext()).search(textInputLayout.getEditText().getText().toString(), new AnimeThemesMoeAPI.OnAnimesListener() {
                     @Override
                     public void onAnimesCompleted(List<Anime> animeList) {
@@ -64,6 +67,7 @@ public class BrowseFragment extends Fragment {
         model.getAnimeList().observe(getViewLifecycleOwner(), item ->{
             // Set the research results
             animeListAdapter.setData(item);
+            progressSearch.setVisibility(View.GONE);
             // Notify the adapter that he needs to update the UI.
             animeListAdapter.notifyDataSetChanged();
         });
