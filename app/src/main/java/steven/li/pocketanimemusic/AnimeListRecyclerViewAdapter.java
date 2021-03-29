@@ -23,8 +23,28 @@ import java.util.List;
 
 import Model.Anime;
 
-public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeViewHolder> {
+public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeListRecyclerViewAdapter.AnimeViewHolder> {
 
+    public class AnimeViewHolder extends RecyclerView.ViewHolder {
+
+        private ImageView imageView;
+        private TextView titleView;
+
+        // @itemView: recyclerview_item_layout.xml
+        public AnimeViewHolder(@NonNull View itemView) {
+            super(itemView);
+            this.imageView = (ImageView) itemView.findViewById(R.id.card_image);
+            this.titleView = (TextView) itemView.findViewById(R.id.card_title);
+        }
+
+        public ImageView getImageView() {
+            return imageView;
+        }
+
+        public TextView getTitleView(){
+            return titleView;
+        }
+    }
 
     private List<Anime> animes;
     private Context context;
@@ -62,8 +82,7 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
         RequestQueue queue = MySingleton.getInstance(context).getRequestQueue();
         // Set an request using the vector to get the image and set in the imageView
         //TODO: API IMAGE
-        /*
-        String link = anime.getImage_url();
+        String link = anime.getImageURL();
         ImageRequest request = new ImageRequest(link,
                 new Response.Listener<Bitmap>() {
                     @Override
@@ -77,7 +96,7 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
             }
         });
         // Add the image request in the queue
-        queue.add(request);*/
+        queue.add(request);
         holder.getTitleView().setText(anime.getTitle());
     }
 
@@ -104,23 +123,3 @@ public class AnimeListRecyclerViewAdapter extends RecyclerView.Adapter<AnimeView
     }
 }
 
-class AnimeViewHolder extends RecyclerView.ViewHolder {
-
-    private ImageView imageView;
-    private TextView titleView;
-
-    // @itemView: recyclerview_item_layout.xml
-    public AnimeViewHolder(@NonNull View itemView) {
-        super(itemView);
-        this.imageView = (ImageView) itemView.findViewById(R.id.card_image);
-        this.titleView = (TextView) itemView.findViewById(R.id.card_title);
-    }
-
-    public ImageView getImageView() {
-        return imageView;
-    }
-
-    public TextView getTitleView(){
-        return titleView;
-    }
-}

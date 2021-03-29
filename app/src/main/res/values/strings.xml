@@ -22,6 +22,7 @@
     <!-- List Preferences -->
     <string name="anilist_title">Your Anilist</string>
     <string name="mal_title">Your MyAnimeList</string>
+    <string name="playlist">Playlist</string>
 
 
 </resources>

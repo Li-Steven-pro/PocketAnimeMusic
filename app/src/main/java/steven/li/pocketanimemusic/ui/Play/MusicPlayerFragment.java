@@ -4,14 +4,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,18 +27,21 @@ import Model.MusicPlayerModel;
 
 import steven.li.pocketanimemusic.AppActivity;
 import steven.li.pocketanimemusic.MusicPlayerViewModel;
-import steven.li.pocketanimemusic.PlayListAdapter;
+import steven.li.pocketanimemusic.PlaylistRecyclerAdapter;
 import steven.li.pocketanimemusic.R;
 import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
-
+import com.ernestoyaquello.dragdropswiperecyclerview.DragDropSwipeRecyclerView;
 public class MusicPlayerFragment extends Fragment {
 
     private TextView titleLabel, artistLabel;
     private TextView playerPosition, playerDuration;
     private SeekBar seekBar;
     private ImageView btnPrev, btnPlay, btnPause, btnNext, btnShuffle, btnRepeat;
-    private ListView listView;
-    PlayListAdapter playListAdapter;
+    // DragDropSwipeRecycler for playlist
+    private DragDropSwipeRecyclerView playlistView;
+
+    // Adapter for the list of songs
+    private PlaylistRecyclerAdapter playListRecyclerAdapter;
 
     private MusicPlayerViewModel mpModel;
     private AppActivity mActivity;
@@ -49,8 +55,11 @@ public class MusicPlayerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_music_player, container, false);
+
+        // Load components
         titleLabel = view.findViewById(R.id.mp_song_title);
         artistLabel = view.findViewById(R.id.mp_song_artist);
         playerPosition = view.findViewById(R.id.player_position);
@@ -62,16 +71,25 @@ public class MusicPlayerFragment extends Fragment {
         btnPause = view.findViewById(R.id.btn_pause);
         btnShuffle = view.findViewById(R.id.btn_shuffle);
         btnRepeat = view.findViewById(R.id.btn_repeat);
-        listView = view.findViewById(R.id.songs_list);
+        playlistView = view.findViewById(R.id.playlist_recycler);
 
+        // Initialize Adaptater for playlist
+        playListRecyclerAdapter = new PlaylistRecyclerAdapter();
+        playlistView.setLayoutManager(new LinearLayoutManager(this.getContext()));
+        playlistView.setAdapter(playListRecyclerAdapter);
+
+        // Load view model for music player
         mpModel = new ViewModelProvider(requireActivity()).get(MusicPlayerViewModel.class);
+        // Add observer to update ui
         mpModel.getMusicPlayer().observe(getViewLifecycleOwner(), item -> {
             titleLabel.setText(item.getSong().getTitle());
             artistLabel.setText(item.getSong().getArtist());
             playerPosition.setText(converFormat(item.getResumePosition()));
-            playListAdapter = new PlayListAdapter(getContext(), item.getSongList(), getActivity());
-            listView.setAdapter(playListAdapter);
-            playListAdapter.notifyDataSetChanged();
+
+            // Set the playlist
+            playListRecyclerAdapter.setDataSet(item.getSongList());
+            playListRecyclerAdapter.notifyDataSetChanged();
+
             if(item.getLooping()){
                 btnRepeat.setImageResource(R.drawable.ic_baseline_repeat_on_24);
             }else{
@@ -103,15 +121,18 @@ public class MusicPlayerFragment extends Fragment {
             }
 
         });
+        // Observer for the seekar
         mpModel.getCurrectPosition().observe(getViewLifecycleOwner(), item ->{
             seekBar.setProgress(item);
             playerPosition.setText(converFormat(item));
         });
 
+        // Add bottomSheet for the playlist
         View bottomSheet = view.findViewById(R.id.bottom_sheet);
         behavior = BottomSheetBehavior.from(bottomSheet);
-        //TODO : Solve the issues with the seekTo feature
+
         /*
+        TODO : Solve the issues with the seekTo feature
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -199,6 +220,12 @@ public class MusicPlayerFragment extends Fragment {
                 - minutes * TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES);
 
         return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        //menu.clear();
+        //inflater.inflate(R.menu.app_bar_menu2, menu);
     }
 
 }
