@@ -17,13 +17,14 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.List;
 
-import API.AnimeThemesMoeAPI;
+import API.AnimeTheme;
 import Model.Anime;
+import Model.Artist;
 import steven.li.pocketanimemusic.AnimeListRecyclerViewAdapter;
 import steven.li.pocketanimemusic.R;
 import steven.li.pocketanimemusic.SearchViewModel;
 
-public class BrowseFragment extends Fragment {
+public class BrowseFragment extends Fragment implements AnimeTheme.OnAnimeThemeListener {
 ;
 
     private SearchViewModel model;
@@ -47,13 +48,8 @@ public class BrowseFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 progressSearch.setVisibility(View.VISIBLE);
-                new AnimeThemesMoeAPI(getContext()).search(textInputLayout.getEditText().getText().toString(), new AnimeThemesMoeAPI.OnAnimesListener() {
-                    @Override
-                    public void onAnimesCompleted(List<Anime> animeList) {
-                        model.setAnimeList(animeList);
-                    }
-                });
-
+                String name = textInputLayout.getEditText().getText().toString();
+                new AnimeTheme(getContext()).searchAnime(name, BrowseFragment.this);
             }
         });
 
@@ -72,5 +68,25 @@ public class BrowseFragment extends Fragment {
             animeListAdapter.notifyDataSetChanged();
         });
         return view;
+    }
+
+    @Override
+    public void onAnilistCompleted(List<Anime> animes) {
+
+    }
+
+    @Override
+    public void onAnimeCompleted(Anime anime) {
+
+    }
+
+    @Override
+    public void onArtistCompleted(Artist artist) {
+
+    }
+
+    @Override
+    public void onSearchAnimeCompleted(List<Anime> animes) {
+        model.setAnimeList(animes);
     }
 }
