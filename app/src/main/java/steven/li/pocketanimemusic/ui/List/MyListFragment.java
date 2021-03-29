@@ -4,14 +4,19 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -49,6 +54,10 @@ public class MyListFragment extends Fragment {
         // Set the list view
         listView = view.findViewById(R.id.list_view);
         // Load the AnimeViewModel
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+        System.out.println(sharedPreferences.getString("anilist", "Default"));
         model = new ViewModelProvider(requireActivity()).get(AnimeViewModel.class);
         // Add an observer to update the list of item showed
         model.getAnimeList().observe(getViewLifecycleOwner(), item ->{
@@ -63,4 +72,6 @@ public class MyListFragment extends Fragment {
         return view;
     }
 
+
 }
+
