@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceActivity;
+import android.view.Menu;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,6 +43,7 @@ import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
 import steven.li.pocketanimemusic.ui.Browse.BrowseFragment;
 import steven.li.pocketanimemusic.ui.List.MyListFragment;
 import steven.li.pocketanimemusic.ui.Play.MusicPlayerFragment;
+import steven.li.pocketanimemusic.ui.Setting.SettingsFragment;
 
 public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAnimesListener{
 
@@ -74,6 +76,12 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         actionBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(actionBar);
 
+        actionBar.setOnMenuItemClickListener(item  ->  {
+            if(item.getItemId() == R.id.nav_setting){
+                loadFragment(new SettingsFragment());
+            }
+            return true;
+        });
         // Set the modelView to set the animeList later
         model = new ViewModelProvider(this).get(AnimeViewModel.class);
         new ViewModelProvider(this).get(SearchViewModel.class);
@@ -82,15 +90,15 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
 
         // On the select listener, add the method that will change the current fragment
         navView.setOnNavigationItemSelectedListener(item -> updateMainFragment(item.getItemId()));
-
         // Get the the name which will use in the API
 
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         String anilist = sharedPreferences.getString("Anilist", "");
-        String pseudo = getIntent().getStringExtra("anilistName");
 
+        //String pseudo = getIntent().getStringExtra("anilistName");
+        String pseudo = "Railex";
         if(pseudo.equals(anilist)){
             loading(pseudo);
         }else{
@@ -98,19 +106,6 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
             new AnimeThemeAPI(pseudo,this).execute();
             editor.putString("Anilist", pseudo);
             editor.apply();
-        }
-
-        // Register Notification event
-        registerNotificationStatusReceiver();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if(musicPlayerIntent == null){
-            musicPlayerIntent = new Intent(this,MusicPlayerService.class);
-            bindService(musicPlayerIntent, musicServiceConnection, Context.BIND_AUTO_CREATE);
-            startService(musicPlayerIntent);
         }
 
         // Seekbar data dedicated thread
@@ -131,7 +126,20 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
                 }
             }
         };
-        new Thread(musicRun).start();
+
+        // Register Notification event
+        registerNotificationStatusReceiver();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(musicPlayerIntent == null){
+            musicPlayerIntent = new Intent(this,MusicPlayerService.class);
+            bindService(musicPlayerIntent, musicServiceConnection, Context.BIND_AUTO_CREATE);
+            startService(musicPlayerIntent);
+
+        }
     }
 
     /**
@@ -181,6 +189,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
             musicPlayer = binder.getService();
             serviceBound = true;
+            new Thread(musicRun).start();
             //Toast.makeText(AppActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
 
         }
@@ -203,6 +212,7 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
 
         }
     };
+
 
     @Override
     public void onDestroy() {
@@ -244,6 +254,11 @@ public class AppActivity extends AppCompatActivity implements AnimeThemeAPI.OnAn
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.app_bar_menu, menu);
+        return true;
     }
 
 }
