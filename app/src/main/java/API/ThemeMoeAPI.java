@@ -25,6 +25,7 @@ import Model.MalAnime;
 public class ThemeMoeAPI
 {
     AnimeThemesMoeAPI.OnAnimesListener animesListener;
+    RequestQueue requestQueue;
     public interface OnThemeMoeListener{
         void onListCompleted(List<MalAnime> animes);
     }
@@ -34,11 +35,12 @@ public class ThemeMoeAPI
 
     public ThemeMoeAPI(Context context){
         this.context = context;
+        this.requestQueue = Volley.newRequestQueue(context);
     }
 
     public void getAniList(String name, ThemeMoeAPI.OnThemeMoeListener listener){
         String url = base_url + "anilist/"+name;
-        RequestQueue requestQueue = Volley.newRequestQueue(context);
+
         JsonArrayRequest jsonObjectRequest = new JsonArrayRequest(Request.Method.GET, url,null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {

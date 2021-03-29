@@ -104,4 +104,5 @@ public class Anime implements Serializable {
         return titles.get(0);
     }
 
+
 }
