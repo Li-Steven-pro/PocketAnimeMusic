@@ -78,6 +78,7 @@ public class MusicPlayerFragment extends Fragment {
         playlistView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         playlistView.setAdapter(playListRecyclerAdapter);
 
+
         // Load view model for music player
         mpModel = new ViewModelProvider(requireActivity()).get(MusicPlayerViewModel.class);
         // Add observer to update ui
