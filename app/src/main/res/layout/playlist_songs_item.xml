@@ -4,26 +4,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp">
+    android:elevation="3dp"
+    >
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp">
+            android:layout_margin="8dp"
+            android:background="@color/colorPrimary">
 
             <TextView
                 android:id="@+id/card_song_title"
                 android:layout_width="wrap_content"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/md_white_1000">
             </TextView>
             <TextView
                 android:id="@+id/card_song_artist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@id/card_song_title"
-                app:layout_constraintTop_toTopOf="@id/card_song_title"
-                app:layout_constraintBottom_toBottomOf="@id/card_song_title">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/card_song_title"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:textSize="11sp"
+                android:textColor="@color/md_white_1000">
             </TextView>
 
             <ImageButton
@@ -32,9 +38,10 @@
                 android:layout_width="35dp"
                 android:layout_height="35dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/card_song_title"
-                app:layout_constraintBottom_toBottomOf="@id/card_song_title"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginEnd="10dp"
+                android:background="@drawable/next_prev_button_background"
                 />
         </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
