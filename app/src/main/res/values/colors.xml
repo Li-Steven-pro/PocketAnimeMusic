@@ -9,6 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="colorPrimary">#292929</color>
     <color name="app_color_primary">#636363</color>
+    <color name="ic_app_icon_background">#101213</color>
     <!-- Text Colors -->
     <color name="md_black_1000_87">#DE000000</color>
     <color name="md_black_1000_54">#8A000000</color>
