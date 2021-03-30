@@ -44,9 +44,14 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     public static final String BROADCAST_STOP = "pocketanimemusic.musicplayer.stop";
     public static final String BROADCAST_PAUSE = "pocketanimemusic.musicplayer.pause";
     public static final String BROADCAST_SEEK_TO = "pocketanimemusic.musicplayer.seek_to";
-    public static final String INTENT_BROADCAST_SEEK_TO = "pocketanimemusic.musicplayer.seek_to.intent_param";
     public static final String BROADCAST_TOGGLE_REPEAT = "pocketanimemusic.musicplayer.repeat";
     public static final String BROADCAST_TOGGLE_SHUFFLE = "pocketanimemusic.musicplayer.shuffle";
+    public static final String BROADCAST_REMOVE = "pocketanimemusic.musicplayer.remove";
+
+    // Intent Key
+    public static final String INTENT_BROADCAST_REMOVE = "pocketanimemusic.musicplayer.remove.intent_param";
+    public static final String INTENT_BROADCAST_SEEK_TO = "pocketanimemusic.musicplayer.seek_to.intent_param";
+    public static final String INTENT_BROADCAST_ADD = "pocketanimemusic.musicplayer.add.intent_param";
 
     // Broadcast SENT
     public static final String NOTIFICATION_STATUS = "pocketanimemusic.musicplayer.notify_status";
@@ -161,7 +166,10 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     public void stop() {
         if (mediaPlayer == null) return;
         if (mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
+            this.status = MusicPlayerModel.STOP;
+            position = 0;
+            resumePosition = 0;
+            mediaPlayer.reset();
         }
     }
 
@@ -170,6 +178,9 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
      */
     @Override
     public void play() {
+        if(listSong.size() == 0){
+            return;
+        }
         if (!mediaPlayer.isPlaying()) {
             if(resumePosition == 0){
                 playQueue();
@@ -201,6 +212,9 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
      */
     @Override
     public void next() {
+        if(listSong.size() == 0 ){
+            return;
+        }
         if (position < listSong.size()-1) {
             position += 1;
 
@@ -213,6 +227,9 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
 
     @Override
     public void prev() {
+        if(listSong.size() == 0 ){
+            return;
+        }
         if (position <= 0) {
             position = listSong.size() - 1;
         } else {
@@ -384,6 +401,7 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
      */
     private void registerAllBroadcastReceiver(){
         registerAddQueueReceiver();
+        registerRemoveReceiver();
         registerPlayReceiver();
         registerPauseReceiver();
         registerPrevReceiver();
@@ -398,6 +416,7 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
      */
     private void unregisterAllBroadcastReceiver(){
         unregisterReceiver(addQueue);
+        unregisterReceiver(remove);
         unregisterReceiver(playMusic);
         unregisterReceiver(pauseMusic);
         unregisterReceiver(nextSong);
@@ -411,11 +430,12 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
     private BroadcastReceiver addQueue = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            System.out.println("add list");
-            Song song = (Song) intent.getSerializableExtra("song");
-            if(song != null){
+        Song song = (Song) intent.getSerializableExtra(MusicPlayerService.INTENT_BROADCAST_ADD);
+        if(song != null){
+            if(!listSong.contains(song)){
                 addToListSong(song);
             }
+        }
         }
     };
     private void registerAddQueueReceiver(){
@@ -423,6 +443,41 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         registerReceiver(addQueue, filter);
     }
 
+    private BroadcastReceiver remove = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Song song = (Song) intent.getSerializableExtra(INTENT_BROADCAST_REMOVE);
+            if(song != null){
+                if(listSong.contains(song)){
+                    if(listSong.indexOf(song) == position){
+                        if(position >= listSong.size()-1){
+                            position = 0;
+                            listSong.remove(song);
+                            if(listSong.size() == 0){
+                                stop();
+                            }
+                        }else{
+                            listSong.remove(song);
+                            playQueue();
+                        }
+                    }
+                    else if(listSong.indexOf(song) < position){
+                        position -=1;
+                        listSong.remove(song);
+                    }
+                    else{
+                        listSong.remove(song);
+                    }
+                }
+            }
+            broadcastChangeStatus();
+        }
+    };
+
+    private void registerRemoveReceiver(){
+        IntentFilter filter = new IntentFilter(MusicPlayerService.BROADCAST_REMOVE);
+        registerReceiver(remove, filter);
+    }
 
     private BroadcastReceiver playMusic = new BroadcastReceiver() {
         @Override
@@ -512,13 +567,19 @@ public class MusicPlayerService extends Service implements IMusicPlayerService,M
         registerReceiver(toggleShuffle, filter);
     }
 
+
     /**
      * Send information about the music service using ModelPlayerModel
      */
     private void broadcastChangeStatus(){
         Intent intent = new Intent();
         intent.setAction(NOTIFICATION_STATUS);
-        MusicPlayerModel musicPlayerModel = new MusicPlayerModel(status, listSong.get(position));
+        MusicPlayerModel musicPlayerModel;
+        if(listSong.size() > 0){
+            musicPlayerModel = new MusicPlayerModel(status, listSong.get(position));
+        }else
+        {   musicPlayerModel = new MusicPlayerModel(status, null);
+        }
         musicPlayerModel.setSongList(listSong);
         musicPlayerModel.setPosition(position);
         musicPlayerModel.setLooping(mediaPlayer.isLooping());

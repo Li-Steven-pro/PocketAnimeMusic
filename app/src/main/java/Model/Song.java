@@ -1,5 +1,7 @@
 package Model;
 
+import androidx.annotation.Nullable;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +18,7 @@ public class Song implements Serializable {
     String artist;
     List<Link> listLink = new ArrayList<Link>();
 
-    public Song(JSONObject jsonObject){
+     public Song(JSONObject jsonObject){
         try{
             id = jsonObject.getString("theme_id");
             title = jsonObject.getString("title");
@@ -45,6 +47,20 @@ public class Song implements Serializable {
     }
     public String getArtist(){
         return artist;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if(obj.getClass() != this.getClass()){
+            return false;
+        }else{
+            if (((Song) obj).getTitle().equals(this.getTitle()) && ((Song) obj).getArtist().equals(this.getArtist())){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
     }
 }
 

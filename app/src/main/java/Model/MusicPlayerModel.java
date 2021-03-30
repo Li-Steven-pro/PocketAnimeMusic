@@ -18,6 +18,7 @@ public class MusicPlayerModel implements Serializable {
     public final static int BUFFERING = 1;
     public final static int PLAYING = 2;
     public final static int PAUSE = 3;
+    public final static int STOP = 0;
 
     public MusicPlayerModel(int status, Song song){
         this.status = status;

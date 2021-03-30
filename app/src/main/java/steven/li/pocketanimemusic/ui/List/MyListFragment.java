@@ -57,7 +57,7 @@ public class MyListFragment extends Fragment {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getActivity());
 
-        System.out.println(sharedPreferences.getString("anilist", "Default"));
+        //System.out.println(sharedPreferences.getString("anilist", "Default"));
         model = new ViewModelProvider(requireActivity()).get(AnimeViewModel.class);
         // Add an observer to update the list of item showed
         model.getAnimeList().observe(getViewLifecycleOwner(), item ->{

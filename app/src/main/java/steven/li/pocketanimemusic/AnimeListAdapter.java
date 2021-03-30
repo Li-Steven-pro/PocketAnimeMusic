@@ -122,7 +122,7 @@ public class AnimeListAdapter extends ArrayAdapter<Anime> {
                 @Override
                 public void onClick(View v) {
                     Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_ADD_PLAYLIST);
-                    broadcastIntent.putExtra("song", song);
+                    broadcastIntent.putExtra(MusicPlayerService.INTENT_BROADCAST_ADD, song);
                     activity.sendBroadcast(broadcastIntent);
                 }
             });

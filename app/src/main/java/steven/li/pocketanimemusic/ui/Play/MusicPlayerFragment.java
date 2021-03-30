@@ -19,19 +19,24 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ernestoyaquello.dragdropswiperecyclerview.listener.OnItemSwipeListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.util.concurrent.TimeUnit;
 
 import Model.MusicPlayerModel;
 
+import Model.Song;
 import steven.li.pocketanimemusic.AppActivity;
 import steven.li.pocketanimemusic.MusicPlayerViewModel;
 import steven.li.pocketanimemusic.PlaylistRecyclerAdapter;
 import steven.li.pocketanimemusic.R;
 import steven.li.pocketanimemusic.service.mediaplayer.MusicPlayerService;
 import com.ernestoyaquello.dragdropswiperecyclerview.DragDropSwipeRecyclerView;
-public class MusicPlayerFragment extends Fragment {
+
+import org.jetbrains.annotations.NotNull;
+
+public class MusicPlayerFragment extends Fragment implements OnItemSwipeListener<Song> {
 
     private TextView titleLabel, artistLabel;
     private TextView playerPosition, playerDuration;
@@ -77,14 +82,20 @@ public class MusicPlayerFragment extends Fragment {
         playListRecyclerAdapter = new PlaylistRecyclerAdapter();
         playlistView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         playlistView.setAdapter(playListRecyclerAdapter);
-
+        playlistView.disableDragDirection(DragDropSwipeRecyclerView.ListOrientation.DirectionFlag.RIGHT);
+        playlistView.setSwipeListener(this);
 
         // Load view model for music player
         mpModel = new ViewModelProvider(requireActivity()).get(MusicPlayerViewModel.class);
         // Add observer to update ui
         mpModel.getMusicPlayer().observe(getViewLifecycleOwner(), item -> {
-            titleLabel.setText(item.getSong().getTitle());
-            artistLabel.setText(item.getSong().getArtist());
+            if(item.getSong() != null){
+                titleLabel.setText(item.getSong().getTitle());
+                artistLabel.setText(item.getSong().getArtist());
+            }else{
+                titleLabel.setText("Title");
+                artistLabel.setText("Artist");
+            }
             playerPosition.setText(converFormat(item.getResumePosition()));
 
             // Set the playlist
@@ -103,24 +114,43 @@ public class MusicPlayerFragment extends Fragment {
             }
             switch (item.getStatus()){
                 case MusicPlayerModel.BUFFERING:
-                    Toast.makeText(mActivity, "Buffering " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    btnPause.setVisibility(View.GONE);
+                    btnPlay.setVisibility(View.VISIBLE);
+                    if(item.getSong() != null) {
+                        Toast.makeText(mActivity, "Buffering " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(mActivity, "Buffering nothing", Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 case MusicPlayerModel.PAUSE:
                     btnPause.setVisibility(View.GONE);
                     btnPlay.setVisibility(View.VISIBLE);
-                    Toast.makeText(mActivity, "Pausing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    if(item.getSong() != null) {
+                        Toast.makeText(mActivity, "Pausing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(mActivity, "Pause nothing", Toast.LENGTH_SHORT).show();
+                    }
                     seekBar.setMax(item.getDuration());
                     playerDuration.setText(converFormat(item.getDuration()));
                     break;
                 case MusicPlayerModel.PLAYING:
                     btnPause.setVisibility(View.VISIBLE);
                     btnPlay.setVisibility(View.INVISIBLE);
-                    Toast.makeText(mActivity, "Playing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    if(item.getSong() != null) {
+                        Toast.makeText(mActivity, "Playing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(mActivity, "Playing nothing", Toast.LENGTH_SHORT).show();
+                    }
+                    //Toast.makeText(mActivity, "Playing " + item.getSong().getTitle(), Toast.LENGTH_SHORT).show();
                     seekBar.setMax(item.getDuration());
                     playerDuration.setText(converFormat(item.getDuration()));
                     break;
+                case MusicPlayerModel.STOP:
+                    btnPause.setVisibility(View.GONE);
+                    btnPlay.setVisibility(View.VISIBLE);
+                    Toast.makeText(mActivity, "Stop mode", Toast.LENGTH_SHORT).show();
+                    break;
             }
-
         });
         // Observer for the seekar
         mpModel.getCurrectPosition().observe(getViewLifecycleOwner(), item ->{
@@ -229,4 +259,11 @@ public class MusicPlayerFragment extends Fragment {
         //inflater.inflate(R.menu.app_bar_menu2, menu);
     }
 
+    @Override
+    public boolean onItemSwiped(int i, @NotNull SwipeDirection swipeDirection, Song song) {
+        Intent broadcastIntent = new Intent(MusicPlayerService.BROADCAST_REMOVE);
+        broadcastIntent.putExtra(MusicPlayerService.INTENT_BROADCAST_REMOVE,song);
+        mActivity.sendBroadcast(broadcastIntent);
+        return false;
+    }
 }
